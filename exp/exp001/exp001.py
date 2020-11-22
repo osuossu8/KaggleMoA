@@ -365,8 +365,10 @@ test_features_stats=test_features2.iloc[:,902:]
 print('stats square done')
 
 
-train_features = pd.concat((train_features, train_features_cluster,train_cluster_pca,train_features_stats), axis=1)
-test_features = pd.concat((test_features, test_features_cluster,test_cluster_pca,test_features_stats), axis=1)
+train_features = pd.concat((train_features, train_features_cluster,train_features_stats), axis=1)
+test_features = pd.concat((test_features, test_features_cluster,test_features_stats), axis=1)
+train_features = pd.concat((train_features, train_cluster_pca), axis=1)
+test_features = pd.concat((test_features, test_cluster_pca), axis=1)
 train_features = pd.concat((train_features, train_cluster_svd), axis=1)
 test_features = pd.concat((test_features, test_cluster_svd), axis=1)
 print('FE done')
@@ -400,8 +402,8 @@ X_test = test.values
 MAX_EPOCH = 200
 
 tabnet_params = dict(
-    n_d = 32,
-    n_a = 32,
+    n_d = 64, # 32,
+    n_a = 64, # 32,
     n_steps = 1,
     gamma = 1.3,
     lambda_sparse = 0,
@@ -417,7 +419,7 @@ tabnet_params = dict(
 scores_auc_all = []
 test_cv_preds = []
 
-NB_SPLITS = 10
+NB_SPLITS = 7 # 10
 mskf = MultilabelStratifiedKFold(n_splits = NB_SPLITS, random_state = 0, shuffle = True)
 
 oof_preds = np.zeros((len(train), len(target_cols)))
