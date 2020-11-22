@@ -132,6 +132,7 @@ def set_seed(seed):
         torch.backends.cudnn.benchmark = False
 set_seed(seed)
 
+
 n_comp = 600  #<--Update
 pca_g = PCA(n_components=n_comp, random_state=42)
 data = pd.concat([pd.DataFrame(train_features[GENES]), pd.DataFrame(test_features[GENES])])
@@ -150,7 +151,6 @@ dump(gpca, open('gpca.pkl', 'wb'))
 
 #CELLS
 n_comp = 50  #<--Update
-
 pca_c = PCA(n_components=n_comp, random_state=42)
 data = pd.concat([pd.DataFrame(train_features[CELLS]), pd.DataFrame(test_features[CELLS])])
 cpca= (pca_c.fit(data[CELLS]))
@@ -170,33 +170,31 @@ print('pca done')
 from sklearn.decomposition import TruncatedSVD
 
 n_comp_GENES = 450
-n_comp_CELLS = 2
+n_comp_CELLS = 20
 
 # GENES
-
 data = pd.concat([pd.DataFrame(train_features[GENES]), pd.DataFrame(test_features[GENES])])
 gsvd = (TruncatedSVD(n_components=n_comp_GENES, random_state=42).fit(data[GENES]))
 train2 = gsvd.transform(train_features[GENES]); test2 = gsvd.transform(test_features[GENES])
 
-train2 = pd.DataFrame(train2, columns=[f'svd_G-{i}' for i in range(n_comp_GENES)])
-test2 = pd.DataFrame(test2, columns=[f'svd_G-{i}' for i in range(n_comp_GENES)])
+train_gsvd = pd.DataFrame(train2, columns=[f'svd_G-{i}' for i in range(n_comp_GENES)])
+test_gsvd = pd.DataFrame(test2, columns=[f'svd_G-{i}' for i in range(n_comp_GENES)])
 
-train_features = pd.concat((train_features, train2), axis=1)
-test_features = pd.concat((test_features, test2), axis=1)
+train_features = pd.concat((train_features, train_gsvd), axis=1)
+test_features = pd.concat((test_features, test_gsvd), axis=1)
 
 dump(gsvd, open('gsvd.pkl', 'wb'))
 
 # CELLS
-
 data = pd.concat([pd.DataFrame(train_features[CELLS]), pd.DataFrame(test_features[CELLS])])
 csvd = ((TruncatedSVD(n_components=n_comp_CELLS, random_state=42).fit(data[CELLS])))
 train2 = csvd.transform(train_features[CELLS]); test2 = csvd.transform(test_features[CELLS])
 
-train2 = pd.DataFrame(train2, columns=[f'svd_C-{i}' for i in range(n_comp_CELLS)])
-test2 = pd.DataFrame(test2, columns=[f'svd_C-{i}' for i in range(n_comp_CELLS)])
+train_csvd = pd.DataFrame(train2, columns=[f'svd_C-{i}' for i in range(n_comp_CELLS)])
+test_csvd = pd.DataFrame(test2, columns=[f'svd_C-{i}' for i in range(n_comp_CELLS)])
 
-train_features = pd.concat((train_features, train2), axis=1)
-test_features = pd.concat((test_features, test2), axis=1)
+train_features = pd.concat((train_features, train_csvd), axis=1)
+test_features = pd.concat((test_features, test_csvd), axis=1)
 
 dump(csvd, open('csvd.pkl', 'wb'))
 print('svd done')
@@ -210,6 +208,7 @@ tmp = train_features[c_n].loc[:, mask]
 train_features = pd.concat([train_features[['sig_id', 'cp_type', 'cp_time', 'cp_dose']], tmp], axis=1)
 tmp = test_features[c_n].loc[:, mask]
 test_features = pd.concat([test_features[['sig_id', 'cp_type', 'cp_time', 'cp_dose']], tmp], axis=1)
+print('Variance threshold done')
 
 
 from sklearn.cluster import KMeans
@@ -235,9 +234,6 @@ def fe_cluster_genes(train, test, n_clusters_g = 22, SEED = 42):
     return train, test
 
 
-train_features2 ,test_features2=fe_cluster_genes(train_features2,test_features2)
-
-
 def fe_cluster_cells(train, test, n_clusters_c = 4, SEED = 42):
     
     features_c = CELLS
@@ -258,9 +254,10 @@ def fe_cluster_cells(train, test, n_clusters_c = 4, SEED = 42):
     return train, test
 
 
-train_features2 ,test_features2=fe_cluster_cells(train_features2,test_features2)
-train_pca=pd.concat((train_gpca,train_cpca),axis=1)
-test_pca=pd.concat((test_gpca,test_cpca),axis=1)
+train_features2, test_features2=fe_cluster_genes(train_features2,test_features2)
+train_features2, test_features2=fe_cluster_cells(train_features2,test_features2)
+print('gene cell cluster done')
+
 
 def fe_cluster_pca(train, test,n_clusters=5,SEED = 42):
         data=pd.concat([train,test],axis=0)
@@ -272,10 +269,33 @@ def fe_cluster_pca(train, test,n_clusters=5,SEED = 42):
         test = pd.get_dummies(test, columns = [f'clusters_pca'])
         return train, test
     
-    
-train_cluster_pca ,test_cluster_pca = fe_cluster_pca(train_pca,test_pca)
+
+train_pca=pd.concat((train_gpca,train_cpca),axis=1)
+test_pca=pd.concat((test_gpca,test_cpca),axis=1)    
+train_cluster_pca, test_cluster_pca = fe_cluster_pca(train_pca,test_pca)
 train_cluster_pca = train_cluster_pca.iloc[:,650:]
 test_cluster_pca = test_cluster_pca.iloc[:,650:]
+print('cluster pca done')
+
+
+def fe_cluster_svd(train, test,n_clusters=5,SEED = 42):
+        data=pd.concat([train,test],axis=0)
+        kmeans_pca = KMeans(n_clusters = n_clusters, random_state = SEED).fit(data)
+        dump(kmeans_pca, open('kmeans_svd.pkl', 'wb'))
+        train[f'clusters_svd'] = kmeans_pca.predict(train.values)
+        test[f'clusters_svd'] = kmeans_pca.predict(test.values)
+        train = pd.get_dummies(train, columns = [f'clusters_svd'])
+        test = pd.get_dummies(test, columns = [f'clusters_svd'])
+        return train, test
+
+
+train_svd=pd.concat((train_gsvd,train_csvd),axis=1)
+test_svd=pd.concat((test_gsvd,test_csvd),axis=1)
+train_cluster_svd, test_cluster_svd = fe_cluster_svd(train_svd,test_svd)
+train_cluster_svd = train_cluster_svd.iloc[:,470:]
+test_cluster_svd = test_cluster_svd.iloc[:,470:]
+print('cluster svd done')
+
 
 train_features_cluster=train_features2.iloc[:,876:]
 test_features_cluster=test_features2.iloc[:,876:]
@@ -284,6 +304,7 @@ gsquarecols=['g-574','g-211','g-216','g-0','g-255','g-577','g-153','g-389','g-60
              'g-203','g-177','g-301','g-332','g-517','g-6', 'g-744','g-224','g-162','g-3','g-736','g-486',
              'g-283','g-22','g-359','g-361','g-440','g-335','g-106','g-307','g-745','g-146','g-416','g-298',
              'g-666','g-91','g-17','g-549','g-145','g-157','g-768','g-568','g-396']
+
 
 def fe_stats(train, test):
     
@@ -341,9 +362,13 @@ def fe_stats(train, test):
 train_features2,test_features2=fe_stats(train_features2,test_features2)
 train_features_stats=train_features2.iloc[:,902:]
 test_features_stats=test_features2.iloc[:,902:]
+print('stats square done')
+
+
 train_features = pd.concat((train_features, train_features_cluster,train_cluster_pca,train_features_stats), axis=1)
 test_features = pd.concat((test_features, test_features_cluster,test_cluster_pca,test_features_stats), axis=1)
-
+train_features = pd.concat((train_features, train_cluster_svd), axis=1)
+test_features = pd.concat((test_features, test_cluster_svd), axis=1)
 print('FE done')
 
 
