@@ -402,8 +402,8 @@ X_test = test.values
 MAX_EPOCH = 200
 
 tabnet_params = dict(
-    n_d = 64, # 32,
-    n_a = 64, # 32,
+    n_d = 32,
+    n_a = 32,
     n_steps = 1,
     gamma = 1.3,
     lambda_sparse = 0,
@@ -419,13 +419,13 @@ tabnet_params = dict(
 scores_auc_all = []
 test_cv_preds = []
 
-NB_SPLITS = 7 # 10
+NB_SPLITS = 7
 mskf = MultilabelStratifiedKFold(n_splits = NB_SPLITS, random_state = 0, shuffle = True)
 
 oof_preds = np.zeros((len(train), len(target_cols)))
 scores = []
 scores_auc = []
-SEED = [19]
+SEED = [11, 22, 33, 44, 55, 66, 77, 88, 99, 1010]
 
 for s in SEED:
     tabnet_params['seed'] = s
