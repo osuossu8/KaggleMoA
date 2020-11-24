@@ -3,6 +3,7 @@ import random
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import sys
 import copy
 import seaborn as sns
  
@@ -20,6 +21,7 @@ import torch.optim as optim
 import warnings
 warnings.filterwarnings('ignore')
 
+from pickle import load,dump
 from tqdm import tqdm
 tqdm.pandas()
 
@@ -59,20 +61,18 @@ train_features[GENES+CELLS] = pd.DataFrame(data2[:train_features.shape[0]])
 test_features[GENES+CELLS] = pd.DataFrame(data2[-test_features.shape[0]:])
 
 
-seed = 42
+def seed_everything(seed_value):
+    random.seed(seed_value)
+    np.random.seed(seed_value)
+    torch.manual_seed(seed_value)
 
-def set_seed(seed):
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    os.environ["PYTHONHASHSEED"] = str(seed)
-    
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(seed)
-        torch.cuda.manual_seed_all(seed)
+    if torch.cuda.is_available(): 
+        torch.cuda.manual_seed(seed_value)
+        torch.cuda.manual_seed_all(seed_value)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
-set_seed(seed)
+    
+seed_everything(42)
 
 
 n_comp = 600  #<--Update
