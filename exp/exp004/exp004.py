@@ -683,8 +683,7 @@ train = make_cv_folds(train, SEEDS, NFOLDS, DRUG_THRESH)
 from time import time
 
 # Averaging on multiple SEEDS
-# SEED = [0, 1, 2, 3, 4, 5, 6]
-SEED = [0]
+SEED = [0, 1, 2, 3, 4, 5, 6]
 oof = np.zeros((len(train), len(target_cols)))
 predictions = np.zeros((len(test), len(target_cols)))
 
@@ -719,8 +718,8 @@ print("CV log_loss: ", score / y_pred.shape[1])
 
 sub1 = sample_submission.drop(columns=target_cols).merge(test[['sig_id']+target_cols], on='sig_id', how='left').fillna(0)
 
-train[['sig_id']+target_cols].to_csv('oof_b1.csv', index=False)
-sub1.to_csv('submission_b1.csv',index=True)
+train[['sig_id']+target_cols].to_csv('oof.csv', index=False)
+sub1.to_csv('submission.csv',index=True)
 
 print('done')
 
