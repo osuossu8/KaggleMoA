@@ -706,8 +706,7 @@ train = make_cv_folds(train, SEEDS, NFOLDS, DRUG_THRESH)
 from time import time
 
 # Averaging on multiple SEEDS
-# SEED = [0, 1, 2, 3, 4, 5, 6]
-SEED = [10, 11, 12, 13, 14, 15, 16]
+SEED = [0, 1, 2, 3, 4, 5, 6]
 oof = np.zeros((len(train), len(target_cols)))
 predictions = np.zeros((len(test), len(target_cols)))
 
