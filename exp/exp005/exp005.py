@@ -539,8 +539,7 @@ def make_cv_folds(train, SEEDS, NFOLDS, DRUG_THRESH):
     vc1 = vc.loc[vc <= DRUG_THRESH].index.sort_values()
     vc2 = vc.loc[vc > DRUG_THRESH].index.sort_values()
 
-    # for seed_id in range(SEEDS):
-    for seed_id in SEEDS:
+    for seed_id in range(SEEDS):
         kfold_col = 'kfold_{}'.format(seed_id)
         
         # STRATIFY DRUGS 18X OR LESS
@@ -698,17 +697,17 @@ PCT_START = 0.1
 model = Model(num_features, num_all_targets)
 
 
+SEEDS = 7
+NFOLDS = 7
+DRUG_THRESH = 18
+
+train = make_cv_folds(train, SEEDS, NFOLDS, DRUG_THRESH)
+
+
 from time import time
 
 # Averaging on multiple SEEDS
-SEED = [10, 11, 12, 13, 14, 15, 16]
-
-# SEEDS = 7
-NFOLDS = 7
-DRUG_THRESH = 18
-train = make_cv_folds(train, SEED, NFOLDS, DRUG_THRESH)
-
-
+SEED = [0, 1, 2, 3, 4, 5, 6]
 oof = np.zeros((len(train), len(target_cols)))
 predictions = np.zeros((len(test), len(target_cols)))
 
