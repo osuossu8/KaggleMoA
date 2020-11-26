@@ -365,12 +365,8 @@ test_features_stats=test_features2.iloc[:,902:]
 print('stats square done')
 
 
-train_features = pd.concat((train_features, train_features_cluster,train_features_stats), axis=1)
-test_features = pd.concat((test_features, test_features_cluster,test_features_stats), axis=1)
-train_features = pd.concat((train_features, train_cluster_pca), axis=1)
-test_features = pd.concat((test_features, test_cluster_pca), axis=1)
-train_features = pd.concat((train_features, train_cluster_svd), axis=1)
-test_features = pd.concat((test_features, test_cluster_svd), axis=1)
+train_features = pd.concat((train_features, train_features_cluster,train_cluster_pca,train_features_stats), axis=1)
+test_features = pd.concat((test_features, test_features_cluster,test_cluster_pca,test_features_stats), axis=1)
 print('FE done')
 
 
@@ -409,8 +405,7 @@ tabnet_params = dict(
     lambda_sparse = 0,
     optimizer_fn = optim.Adam,
     optimizer_params = dict(lr = 2e-2, weight_decay = 1e-5),
-    # mask_type = "entmax",
-    mask_type = "sparsemax",
+    mask_type = "entmax",
     scheduler_params = dict(mode = "min", patience = 5, min_lr = 1e-5, factor = 0.9),
     scheduler_fn = ReduceLROnPlateau,
     seed = seed,
@@ -420,13 +415,13 @@ tabnet_params = dict(
 scores_auc_all = []
 test_cv_preds = []
 
-NB_SPLITS = 10 # 7
+NB_SPLITS = 10
 mskf = MultilabelStratifiedKFold(n_splits = NB_SPLITS, random_state = seed, shuffle = True)
 
 oof_preds = np.zeros((len(train), len(target_cols)))
 scores = []
 scores_auc = []
-SEED = [100, 101, 102, 103, 104, 105, 106, 107, 108, 109]
+SEED = [103, 104, 105, 106, 107, 108, 109]
 
 for s in SEED:
     tabnet_params['seed'] = s
